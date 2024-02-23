@@ -24,39 +24,33 @@ public class MainMaster {
         System.out.println("Client accepted");
 
         // takes input from the client socket
-        in = new DataInputStream(
-            new BufferedInputStream(socket.getInputStream()));
-
-        String line = "";
-
-        // reads message from client until "Over" is sentz
-        while (!line.equals("Over"))
-        {
-            try
-            {
-                line = in.readUTF();
-                System.out.println(line);
-
-            }
-            catch(IOException i)
-            {
-                System.out.println(i);
-            }
-        }
-        System.out.println("Closing connection");
-
-        // close connection
-        socket.close();
-        in.close();
+        in = new DataInputStream(System.in);
+        out = new DataOutputStream(socket.getOutputStream());
     }
-    catch(IOException i)
-    {
+    catch(UnknownHostException h) {
+        System.out.println(h);
+        return;
+    }
+    catch(IOException i) {
         System.out.println(i);
+        return;
+    }
+
+    String temp = "";
+
+    while(true) {
+        try {
+            temp = in.readLine();
+            out.writeUTF(temp);
+        }
+        catch(IOException i) {
+            System.out.print(i);
+        }
     }
   }
   
   public static void main(String[] args) {
-    System.out.println("Hello world!");
+    MainMaster server = new MainMaster(1337);
   }
 
   // @Test
