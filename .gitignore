@@ -1,1 +1,4 @@
 *.class
+/test
+Client.java
+Server.java

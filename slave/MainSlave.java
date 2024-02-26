@@ -3,6 +3,7 @@ import java.net.*;
 
 public class MainSlave {
     private Socket socketSlave = null;
+    private int PORT = 1337;
     private DataInputStream input = null;
     private DataInputStream output = null;
 
