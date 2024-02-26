@@ -3,24 +3,19 @@ import java.net.*;
 
 public class MainSlave {
     private Socket socketSlave = null;
-    private int PORT = 1337;
-    private DataInputStream input = null;
-    private DataInputStream output = null;
+    private static int PORT = 1337;
+    private static String SERVER_ADDRESS = "127.0.0.1";
+    private DataInputStream in = null;
+    private DataInputStream out = null;
 
     public MainSlave(String address, int port) {
+
         try {
             socketSlave = new Socket(address, port);
-            input = new DataInputStream(new BufferedInputStream(socketSlave.getInputStream()));
+            in = new DataInputStream(socketSlave.getInputStream());
 
-            String temp = "";
-            while(true) {
-                try {
-                    temp = input.readUTF();
-                    System.out.println(temp);
-                }
-                catch(IOException i) {
-                    System.out.println(i);
-                }
+            while (true) {
+                System.out.println(in.readInt() + ", " + in.readInt());
             }
         }
         catch(IOException i) {
@@ -29,6 +24,6 @@ public class MainSlave {
     }
 
     public static void main(String args[]) {
-        MainSlave slave = new MainSlave("127.0.0.1", 1337);
+        MainSlave slave = new MainSlave(SERVER_ADDRESS, PORT);
     }
 }
