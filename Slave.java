@@ -2,7 +2,8 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
-public class MainSlave {
+/* Gets a range from Master for prime checking */
+public class Slave {
     private Socket socketSlave = null;
     private static int PORT = 1337;
     private static String SERVER_ADDRESS = "127.0.0.1";
@@ -11,10 +12,10 @@ public class MainSlave {
 
     private static int start;
     private static int end;
+    private static int NUM_THREADS = 8;
     private static ArrayList<Integer> primes = new ArrayList<>();
 
-    public MainSlave(String address, int port) {
-
+    public Slave(String address, int port) {
         try {
             socketSlave = new Socket(address, port);
             out = new DataOutputStream(socketSlave.getOutputStream());
@@ -25,13 +26,11 @@ public class MainSlave {
                 end = in.readInt();
                 System.out.println(start + ", " + end);
 
-                for(int i = start; i <= end; i++) {
-                    if(check_prime(i))
-                        primes.add(i);
-                }
+                PrimeThreadHandler.start(start, end, NUM_THREADS, primes);      // Do sanity checking in this method
 
-                // TODO: Do sanity checking here
                 out.writeInt(primes.size());
+
+                System.out.println("Prime count (slave): " + primes.size());
 
                 primes.clear();
             }
@@ -41,16 +40,7 @@ public class MainSlave {
         }
     }
 
-    public static boolean check_prime(int n) {
-        for(int i = 2; i * i <= n; i++) {
-            if(n % i == 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public static void main(String args[]) {
-        MainSlave slave = new MainSlave(SERVER_ADDRESS, PORT);
+        Slave slave = new Slave(SERVER_ADDRESS, PORT);
     }
 }
