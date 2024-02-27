@@ -4,13 +4,14 @@ import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.io.*;
 
+/* Handles user input and distributing ranges to connected slaves and self */
 public class Master {
     static ServerSocket serverSocket = null;
     static int PORT = 1337;
 
     static int start = 2;
     static int end = 100;
-    static int NUM_THREADS = 1;
+    static int NUM_THREADS = 8;
 
     static int numPrimes = 0;
 
@@ -20,8 +21,8 @@ public class Master {
     static Semaphore primeCountSem = new Semaphore(1);
 
   public static void main(String[] args) {
-    MasterThread master = new MasterThread();
-    master.start();
+    SlaveAcceptThread accepter = new SlaveAcceptThread();
+    accepter.start();
 
     Scanner sc = new Scanner(System.in);
 
@@ -32,8 +33,7 @@ public class Master {
         System.out.print("Enter end: ");
         Master.end = sc.nextInt();
         
-        // Divides range and gives to slave servers
-        // TODO: Give tasks to master too
+        // Divides range and gives to slave servers (and self)
         try {
             readyToProcessSem.acquire();
 
@@ -50,7 +50,7 @@ public class Master {
                 numPerSlave = 1;
             }
     
-            for (int i = 0; i < numSlaves - 1; i++) {
+            for (int i = 0; i < numSlaves - 1; i++) {           // NOT SURE IF THIS NEEDS A -1
                 // Sends start and end to slave
                 Socket currSocket = slaves.get(i);
                 DataOutputStream out = new DataOutputStream(currSocket.getOutputStream());
@@ -59,7 +59,7 @@ public class Master {
 
                 tempStart = tempEnd + 1;
 
-                //Any excess goes to the final slave
+                //Any excess goes to the final slave (master server)
                 if (i == numSlaves - 2) {
                     tempEnd = end;
                 }
@@ -68,11 +68,9 @@ public class Master {
             }
 
             ArrayList<Integer> primes = new ArrayList<>();
+            PrimeThreadHandler.start(tempStart, tempEnd, NUM_THREADS, primes);
 
-            for(int i = tempStart; i <= tempEnd; i++) {
-                if(check_prime(i))
-                    primes.add(i);
-            }
+            System.out.println("Prime count (master): " + primes.size());
 
             primeCountSem.acquire();
             numPrimes += primes.size();
@@ -90,19 +88,10 @@ public class Master {
     }
     
   }
-
-  public static boolean check_prime(int n) {
-    for(int i = 2; i * i <= n; i++) {
-        if(n % i == 0) {
-            return false;
-        }
-    }
-    return true;
-}
 }
 
-// Keeps accepting connections from slaves
-class MasterThread extends Thread {
+/* Keeps accepting connections from slaves */
+class SlaveAcceptThread extends Thread {
     public void run() {
         try {
             Master.serverSocket = new ServerSocket(Master.PORT);
@@ -135,7 +124,7 @@ class MasterThread extends Thread {
 }
 
 // TODO: Maybe make a thread for each connected slave and wait for its returned prime count there
-// class SlaveListenerThread extends Thread {
+// class SlaveResultThread extends Thread {
 //     // waits for returned prime count from slaves
 //     public void run() {
 //         while (true) {
