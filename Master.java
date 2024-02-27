@@ -4,7 +4,7 @@ import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.io.*;
 
-public class MainMaster {
+public class Master {
     static ServerSocket serverSocket = null;
     static int PORT = 1337;
 
@@ -12,9 +12,12 @@ public class MainMaster {
     static int end = 100;
     static int NUM_THREADS = 1;
 
+    static int numPrimes = 0;
+
     static ArrayList<Socket> slaves = new ArrayList<>();
     static Semaphore readyToProcessSem = new Semaphore(0);          // Used to make sure there is at least one slave connected
     static Semaphore slaveListSem = new Semaphore(1);               // Used to ensure no interference on slaves list
+    static Semaphore primeCountSem = new Semaphore(1);
 
   public static void main(String[] args) {
     MasterThread master = new MasterThread();
@@ -25,16 +28,17 @@ public class MainMaster {
     while (true) {
         // Gets user input
         System.out.print("Enter start: ");
-        MainMaster.start = sc.nextInt();
+        Master.start = sc.nextInt();
         System.out.print("Enter end: ");
-        MainMaster.end = sc.nextInt();
+        Master.end = sc.nextInt();
         
         // Divides range and gives to slave servers
+        // TODO: Give tasks to master too
         try {
             readyToProcessSem.acquire();
 
             slaveListSem.acquire();
-            int numSlaves = slaves.size();
+            int numSlaves = slaves.size() + 1;      // +1 for the master server
             int size = end - start + 1;
             numSlaves = Math.min(numSlaves, size);
 
@@ -46,7 +50,7 @@ public class MainMaster {
                 numPerSlave = 1;
             }
     
-            for (int i = 0; i < numSlaves; i++) {
+            for (int i = 0; i < numSlaves - 1; i++) {
                 // Sends start and end to slave
                 Socket currSocket = slaves.get(i);
                 DataOutputStream out = new DataOutputStream(currSocket.getOutputStream());
@@ -63,6 +67,17 @@ public class MainMaster {
                     tempEnd += numPerSlave;
             }
 
+            ArrayList<Integer> primes = new ArrayList<>();
+
+            for(int i = tempStart; i <= tempEnd; i++) {
+                if(check_prime(i))
+                    primes.add(i);
+            }
+
+            primeCountSem.acquire();
+            numPrimes += primes.size();
+            primeCountSem.release();
+
             slaveListSem.release();
             readyToProcessSem.release();        // Might be another way to not use semaphores bc this is only needed for the first slave
         } catch (InterruptedException e) {
@@ -75,26 +90,35 @@ public class MainMaster {
     }
     
   }
+
+  public static boolean check_prime(int n) {
+    for(int i = 2; i * i <= n; i++) {
+        if(n % i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
 }
 
 // Keeps accepting connections from slaves
 class MasterThread extends Thread {
     public void run() {
         try {
-            MainMaster.serverSocket = new ServerSocket(MainMaster.PORT);
+            Master.serverSocket = new ServerSocket(Master.PORT);
             System.out.println("Server started");
     
             System.out.println("Waiting for slave server/s to connect...");
             while(true) {
-                Socket newSlave = MainMaster.serverSocket.accept();
-                MainMaster.slaveListSem.acquire();
-                MainMaster.slaves.add(newSlave);
-                MainMaster.slaveListSem.release();
+                Socket newSlave = Master.serverSocket.accept();
+                Master.slaveListSem.acquire();
+                Master.slaves.add(newSlave);
+                Master.slaveListSem.release();
 
-                System.out.println("New slave! Slave count: " + MainMaster.slaves.size());
+                System.out.println("New slave! Slave count: " + Master.slaves.size());
 
-                if(MainMaster.slaves.size() == 1)
-                    MainMaster.readyToProcessSem.release();
+                if(Master.slaves.size() == 1)
+                    Master.readyToProcessSem.release();
             }
         }
         catch(UnknownHostException h) {
@@ -105,8 +129,17 @@ class MasterThread extends Thread {
             System.out.println(i);
             return;
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 }
+
+// TODO: Maybe make a thread for each connected slave and wait for its returned prime count there
+// class SlaveListenerThread extends Thread {
+//     // waits for returned prime count from slaves
+//     public void run() {
+//         while (true) {
+//             int receivedPrimeCount = MainMaster.in
+//         }
+//     }
+// }
