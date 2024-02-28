@@ -13,9 +13,10 @@ public class Master {
     static int end = 100;
     static int NUM_THREADS = 8;
 
-    static int numPrimes = 0;
+    static Integer numPrimes = 0;
 
     static ArrayList<Socket> slaves = new ArrayList<>();
+    static ArrayList<SlaveListener> slaveListeners = new ArrayList<>();
     static Semaphore readyToProcessSem = new Semaphore(0);          // Used to make sure there is at least one slave connected
     static Semaphore slaveListSem = new Semaphore(1);               // Used to ensure no interference on slaves list
     static Semaphore primeCountSem = new Semaphore(1);
@@ -35,6 +36,7 @@ public class Master {
         
         // Divides range and gives to slave servers (and self)
         try {
+            numPrimes = 0;
             readyToProcessSem.acquire();
 
             slaveListSem.acquire();
@@ -50,9 +52,12 @@ public class Master {
                 numPerSlave = 1;
             }
     
-            for (int i = 0; i < numSlaves - 1; i++) {           // NOT SURE IF THIS NEEDS A -1
+            for (int i = 0; i < numSlaves - 1; i++) {         
                 // Sends start and end to slave
                 Socket currSocket = slaves.get(i);
+                SlaveListener currListener = new SlaveListener(currSocket, numPrimes);
+                slaveListeners.add(currListener);
+                slaveListeners.get(slaveListeners.size() - 1).start();
                 DataOutputStream out = new DataOutputStream(currSocket.getOutputStream());
                 out.writeInt(tempStart);
                 out.writeInt(tempEnd);
@@ -69,8 +74,16 @@ public class Master {
 
             ArrayList<Integer> primes = new ArrayList<>();
             PrimeThreadHandler.start(tempStart, tempEnd, NUM_THREADS, primes);
+            numPrimes += primes.size();
 
-            System.out.println("Prime count (master): " + primes.size());
+            System.out.println(tempStart + ", " + tempEnd);
+            System.out.println("Prime count (master): "  + primes.size());
+
+            for(SlaveListener s : slaveListeners) {
+                s.join();
+            }
+
+            System.out.println("Total primes: " + (numPrimes));
 
             primeCountSem.acquire();
             numPrimes += primes.size();
@@ -111,24 +124,15 @@ class SlaveAcceptThread extends Thread {
             }
         }
         catch(UnknownHostException h) {
-            System.out.println(h);
+            // h.printStackTrace();
             return;
         }
         catch(IOException i) {
-            System.out.println(i);
+            // i.printStackTrace();
             return;
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            return;
         }
     }
 }
-
-// TODO: Maybe make a thread for each connected slave and wait for its returned prime count there
-// class SlaveResultThread extends Thread {
-//     // waits for returned prime count from slaves
-//     public void run() {
-//         while (true) {
-//             int receivedPrimeCount = MainMaster.in
-//         }
-//     }
-// }

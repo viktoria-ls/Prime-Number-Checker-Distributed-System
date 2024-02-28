@@ -29,6 +29,10 @@ public class Slave {
                 PrimeThreadHandler.start(start, end, NUM_THREADS, primes);      // Do sanity checking in this method
 
                 out.writeInt(primes.size());
+                
+                // for(Integer p : primes) {
+                //     System.out.println(p);
+                // }
 
                 System.out.println("Prime count (slave): " + primes.size());
 
@@ -36,7 +40,7 @@ public class Slave {
             }
         }
         catch(IOException i) {
-            System.out.println(i);
+            i.printStackTrace();
         }
     }
 

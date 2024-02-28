@@ -26,7 +26,7 @@ public class PrimeThreadHandler {
             tempStart = tempEnd + 1;
 
             // Any excess goes to the final thread
-            if (i == numThreads) {
+            if (i == numThreads - 2) {
                 tempEnd = end;
             }
             else
