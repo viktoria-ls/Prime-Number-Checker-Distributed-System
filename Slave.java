@@ -25,7 +25,7 @@ public class Slave {
                 NUM_THREADS = in.readInt();
                 start = in.readInt();
                 end = in.readInt();
-                System.out.println("Threads used: " + NUM_THREADS + "Range: " + start + ", " + end);
+                System.out.println("Threads used: " + NUM_THREADS + " Range: " + start + ", " + end);
 
                 PrimeThreadHandler.start(start, end, NUM_THREADS, primes);      // Do sanity checking in this method
 
