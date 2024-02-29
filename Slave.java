@@ -22,6 +22,7 @@ public class Slave {
             in = new DataInputStream(socketSlave.getInputStream());
 
             while (true) {
+                NUM_THREADS = in.readInt();
                 start = in.readInt();
                 end = in.readInt();
                 System.out.println(start + ", " + end);

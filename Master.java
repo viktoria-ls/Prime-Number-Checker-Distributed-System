@@ -11,7 +11,7 @@ public class Master {
 
     static int start = 2;
     static int end = 100;
-    static int NUM_THREADS = 8;
+    static int NUM_THREADS = 1;
 
     static Integer numPrimes = 0;
 
@@ -29,6 +29,8 @@ public class Master {
 
     while (true) {
         // Gets user input
+        System.out.print("Enter thread count: ");
+        Master.NUM_THREADS = sc.nextInt();
         System.out.print("Enter start: ");
         Master.start = sc.nextInt();
         System.out.print("Enter end: ");
@@ -63,6 +65,7 @@ public class Master {
                 slaveListeners.add(currListener);
                 slaveListeners.get(slaveListeners.size() - 1).start();
                 DataOutputStream out = new DataOutputStream(currSocket.getOutputStream());
+                out.writeInt(NUM_THREADS);
                 out.writeInt(tempStart);
                 out.writeInt(tempEnd);
 
