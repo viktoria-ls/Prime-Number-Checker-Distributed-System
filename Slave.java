@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Slave {
     private Socket socketSlave = null;
     private static int PORT = 1337;
-    private static String SERVER_ADDRESS = "10.50.190.251";
+    private static String SERVER_ADDRESS = "10.50.191.197";
     private DataInputStream in = null;
     private DataOutputStream out = null;
 
