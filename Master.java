@@ -91,7 +91,7 @@ public class Master {
             long endTime = System.currentTimeMillis();
             long totalTime = endTime - startTime;
             System.out.println("Total primes: " + (numPrimes));
-            System.out.println("Total time: " + (totalTime));
+            System.out.println("Total time (ms): " + (totalTime));
 
             primeCountSem.acquire();
             numPrimes += primes.size();
