@@ -45,13 +45,17 @@ public class Master {
             numSlaves = Math.min(numSlaves, size);
 
             int numPerSlave = size / numSlaves;
+            
             int tempStart = start;
             int tempEnd = tempStart + numPerSlave - 1;
 
             if(numPerSlave < 1) {
                 numPerSlave = 1;
             }
-    
+
+            
+            long startTime = System.currentTimeMillis();
+            
             for (int i = 0; i < numSlaves - 1; i++) {         
                 // Sends start and end to slave
                 Socket currSocket = slaves.get(i);
@@ -83,7 +87,11 @@ public class Master {
                 s.join();
             }
 
+
+            long endTime = System.currentTimeMillis();
+            long totalTime = endTime - startTime;
             System.out.println("Total primes: " + (numPrimes));
+            System.out.println("Total time: " + (totalTime));
 
             primeCountSem.acquire();
             numPrimes += primes.size();
